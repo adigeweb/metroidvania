@@ -1,3 +1,7 @@
+* {
+    user-select: none;
+}
+
 body {
     overflow: hidden;
     margin: 0;
@@ -153,4 +157,12 @@ body {
     height: 20px;
     width: 100px;
     background: limegreen;
+}
+
+#health-bar {
+    position: absolute;
+    left: 50px;
+    bottom: 20px;
+    height: 100px;
+    z-index: 1;
 }

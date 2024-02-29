@@ -1,5 +1,11 @@
 const numerize = (str) => {
-    return (parseInt(str.replace("px", "")));
+    return (
+        str.endsWith("px") ?
+        parseInt(str.replace("px", "")) :
+        (
+            str.endsWith("%") ? parseInt(str.replace("%", "")) : str
+        )
+    );
 }
 
 const increase = (str, n) => {
@@ -7,6 +13,8 @@ const increase = (str, n) => {
 }
 
 var frame = 0;
+var direction = 1;
+var health = 11;
 
 setInterval(() => {
     frame += 10;
@@ -48,12 +56,13 @@ const startUp = () => {
     document.addEventListener("click", (event) => {
         let bullet = document.createElement("div");
         bullet.id = "bullet-green";
-        document.body.appendChild(bullet);
-        bullet.style.left = increase(character.style.left, character.getBoundingClientRect().width);
-        bullet.style.bottom = increase(character.style.bottom, character.getBoundingClientRect().height);
+        setTimeout(() => {
+            document.body.appendChild(bullet);
+            bullet.style.left = increase(character.style.left, character.getBoundingClientRect().width);
+        bullet.style.bottom = increase(character.style.bottom, character.getBoundingClientRect().height * (2 / 3));
+        }, 500);
         var bulletMove = setInterval(() => {
-            bullet.style.left = increase(bullet.style.left, (event.clientX - numerize(bullet.style.left)) * .05);
-            bullet.style.bottom = increase(bullet.style.bottom, (window.innerHeight - numerize(bullet.style.bottom) - event.clientY - bullet.style.height / 2) * .05);
+            bullet.style.left = increase(bullet.style.left, 25 * direction);
         });
         character.src = "assets/char-trigger.gif";
         setTimeout(() => {
@@ -68,12 +77,13 @@ const startUp = () => {
         event.preventDefault();
         let bullet = document.createElement("div");
         bullet.id = "bullet-red";
-        document.body.appendChild(bullet);
-        bullet.style.left = increase(character.style.left, character.getBoundingClientRect().width);
-        bullet.style.bottom = increase(character.style.bottom, character.getBoundingClientRect().height);
+        setTimeout(() => {
+            document.body.appendChild(bullet);
+            bullet.style.left = increase(character.style.left, character.getBoundingClientRect().width);
+            bullet.style.bottom = increase(character.style.bottom, character.getBoundingClientRect().height * (2 / 3));
+        }, 500);
         var bulletMove = setInterval(() => {
-            bullet.style.left = increase(bullet.style.left, (event.clientX - numerize(bullet.style.left)) * .05);
-            bullet.style.bottom = increase(bullet.style.bottom, (window.innerHeight - numerize(bullet.style.bottom) - event.clientY - bullet.style.height / 2) * .05);
+            bullet.style.left = increase(bullet.style.left, 25 * direction);
         });
         character.src = "assets/char-trigger.gif";
         setTimeout(() => {
@@ -85,6 +95,14 @@ const startUp = () => {
         }, 1000);
     });
     document.querySelector("#secondary.ground").style.left = `${screen.innerWidth}px`;
+    document.addEventListener("keydown", (event) => {
+        if (event.key == "e") {
+            if (!document.querySelector(".blue-box[filled]")) return;
+            document.querySelector(".bullet-blue").style.left = increase(document.querySelector(".bullet-blue").getBoundingClientRect().left, document.querySelector(".bullet-blue").getBoundingClientRect().width);
+            document.querySelector(".bullet-blue").style.bottom = increase(document.querySelector(".bullet-blue").getBoundingClientRect().bottom, document.querySelector(".bullet-blue").getBoundingClientRect().height);
+            document.querySelector(".bullet-blue").style.display = "block";
+        }
+    });
 }
 
 const jump = () => {
@@ -117,6 +135,7 @@ const game = () => {
     if ((keyInputs[37] || keyInputs[65]) && !conditions.leftCol) {
         character.src = "assets/char-walk.gif";
         character.style.transform = "scaleX(-1)";
+        direction = -1;
         if (numerize(background.style.left) == 0) {
             character.style.left = increase(character.style.left, -2);
         }
@@ -134,6 +153,7 @@ const game = () => {
     if ((keyInputs[39] || keyInputs[68]) && !conditions.rightCol) {
         character.src = "assets/char-walk.gif";
         character.style.transform = "scaleX(1)";
+        direction = 1;
         if (numerize(character.style.left) < screen.width / 2 - character.getBoundingClientRect().width / 2) {
             character.style.left = increase(character.style.left, 2);
         }
@@ -173,22 +193,38 @@ const game = () => {
             item.style.left = `${screen.innerWidth}px`;
         }
     });
-    if (frame % 20000 == 0) {
+    if (frame % 2000 == 0) {
         spawn(`skool-${["red", "green"][Math.floor(Math.random() * 2)]}`, 30);
     }
     document.querySelectorAll("[id ^= bullet]").forEach(item => {
         document.querySelectorAll(".monster").forEach(monster => {
-            if (touches(item, monster.querySelector("img")) && (monster.getAttribute("data-color") == item.id.split("-")[1])) {
-                if (monster.getAttribute("data-cd")) return;
-                document.querySelectorAll(`.${item.id.split("-")[1]}-box:not([filled])`)[0].setAttribute("filled", "true");
-                if (document.querySelectorAll(".green-box:not([filled]), .red-box:not([filled])").length == 0) {
-                    document.querySelector(".blue-box").setAttribute("filled", "true");
-                    document.querySelector(".blue-box").innerHTML = "<i class=\"fa fa-star\"></i>"
+            if (touches(item, monster.querySelector("img"))) {
+                if (document.querySelectorAll(`.${item.id.split("-")[1]}-box:not([filled])`)[0]) {
+                    document.querySelectorAll(`.${item.id.split("-")[1]}-box:not([filled])`)[0].setAttribute("filled", "true");
+                    if (document.querySelectorAll(".green-box:not([filled]), .red-box:not([filled])").length == 0) {
+                        document.querySelector(".blue-box").setAttribute("filled", "true");
+                        document.querySelector(".blue-box").innerHTML = "<i class=\"fa fa-star\"></i>"
+                    }
                 }
                 dealDamage(monster, 10);
                 item.remove();
             }
         })
+    });
+    if (frame % 50 == 0) {
+        document.querySelectorAll(".monster[data-force]").forEach(item => {
+            item.querySelector("img").style.left = `${numerize(item.querySelector(".health").style.left) - parseInt(item.getAttribute("data-force")) / 10000}%`;
+            item.querySelector(".health").style.left = `${numerize(item.querySelector(".health").style.left) - parseInt(item.getAttribute("data-force")) / 10000}%`;
+            if (item.querySelector(".health").getBoundingClientRect().left <= 0) {
+                item.remove();
+            }
+        });
+    }
+    document.querySelectorAll(".monster").forEach(item => {
+        if (touches(item.querySelector("img"), character)) {
+            takeDamage();
+            item.remove();
+        }
     });
 }
 
@@ -200,7 +236,6 @@ const spawn = (char, hp) => {
     container.setAttribute("data-max", hp);
     var mob = document.createElement("img");
     mob.src = `assets/${char}.gif`;
-    mob.id = "skool";
     mob.class = "monster";
     var health = document.createElement("div");
     health.classList.add("health");
@@ -209,13 +244,17 @@ const spawn = (char, hp) => {
     container.appendChild(health);
     mob.style.position = "absolute";
     if (char.startsWith("skool-")) {
-        var y = 150 + Math.floor(Math.random() * (window.innerHeight - 325));
+        var y = 200 + Math.floor(Math.random() * (window.innerHeight - 325));
         mob.style.left = "90%";
         mob.style.bottom = `${y}px`;
         health.style.left = "91%";
         health.style.bottom = `${y + 150}px`;
+        mob.id = "skool";
+        container.setAttribute("data-force",
+            Math.floor(Math.random() * 5)
+        );
     }
-    document.body.appendChild(container);
+    document.querySelector(".scroll").appendChild(container);
 }
 
 const dealDamage = (mob, hp) => {
@@ -226,6 +265,14 @@ const dealDamage = (mob, hp) => {
         linear-gradient(to right, limegreen 0 ${mob.getAttribute("data-health") / (mob.getAttribute("data-max") / 100)}%, red ${mob.getAttribute("data-health") / (mob.getAttribute("data-max") / 100)}% 100%)
     `;
     if (parseInt(mob.getAttribute("data-health")) <= 0) mob.remove();
+}
+
+const takeDamage = (hp = 1) => {
+    health -= hp;
+    document.querySelector("#health-bar").src = `assets/hearts/heart${health.toString()}.png`;
+    if (health == 0) {
+        alert("yenildin ama henüz kaybetme ekranı yok. :)");
+    }
 }
 
 startUp();
