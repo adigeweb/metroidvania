@@ -1,0 +1,156 @@
+body {
+    overflow: hidden;
+    margin: 0;
+}
+
+[id ^="background"] {
+    position: absolute;
+    top: 0;
+    height: calc(100% - 135px);
+    width: auto;
+    z-index: -999;
+    user-select: none;
+}
+
+#character {
+    position: absolute;
+    height: 200px;
+}
+
+#primary.ground {
+    position: absolute;
+    background: url("assets/ground.png");
+    background-size: auto 150px;
+    height: 150px;
+    width: 100%;
+    left: 0;
+    bottom: 0;
+}
+
+#secondary.ground {
+    position: absolute;
+    background: url("assets/ground.png");
+    background-size: auto 150px;
+    height: 150px;
+    width: 100%;
+    bottom: 0;
+}
+
+#wall1 {
+    position: absolute;
+    background: black;
+    height: 100px;
+    width: 60px;
+}
+
+#wall2 {
+    position: absolute;
+    background: black;
+    height: 100px;
+    width: 60px;
+}
+
+#bullet-green, #bullet-red {
+    bottom: 0;
+    left: 0;
+    position: absolute;
+    height: 10px;
+    width: 20px;
+}
+
+#bullet-green {
+    background: limegreen;
+}
+
+#bullet-green::after {
+    content: "";
+    position: absolute;
+    right: -5px;
+    height: 10px;
+    width: 10px;
+    background: green;
+}
+
+#bullet-red {
+    background: red;
+}
+
+#bullet-red::after {
+    content: "";
+    position: absolute;
+    right: -5px;
+    height: 10px;
+    width: 10px;
+    background: rgb(113, 10, 31);
+}
+
+#bullet-blue {
+    display: none;
+    position: absolute;
+    background: white;
+    border-top: 4.5px solid dodgerblue;
+    border-bottom: 4.5px solid dodgerblue;
+    height: 6px;
+    width: 100%;
+}
+
+.super-load {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translatex(-50%);
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+}
+
+.red-box {
+    height: 45px;
+    width: 45px;
+    background: rgb(113, 10, 31);
+    border: 3px solid red;
+}
+
+.green-box {
+    height: 45px;
+    width: 45px;
+    background: green;
+    border: 3px solid limegreen;
+}
+
+.blue-box {
+    height: 60px;
+    width: 60px;
+    background: darkslateblue;
+    border: 3px solid dodgerblue;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 30px;
+    color: white;
+}
+
+.red-box[filled] {
+    background: red;
+}
+
+.green-box[filled] {
+    background: limegreen;
+}
+
+.blue-box[filled] {
+    background: dodgerblue;
+}
+
+#skool {
+    position: absolute;
+    height: 150px;
+}
+
+.monster .health {
+    position: absolute;
+    height: 20px;
+    width: 100px;
+    background: limegreen;
+}
