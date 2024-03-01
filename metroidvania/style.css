@@ -40,18 +40,8 @@ body {
     bottom: 0;
 }
 
-#wall1 {
+.scroll * {
     position: absolute;
-    background: black;
-    height: 100px;
-    width: 60px;
-}
-
-#wall2 {
-    position: absolute;
-    background: black;
-    height: 100px;
-    width: 60px;
 }
 
 #bullet-green, #bullet-red {
@@ -150,6 +140,14 @@ body {
 #skool {
     position: absolute;
     height: 150px;
+}
+
+#wall1 {
+    background: #000;
+}
+
+#wall2 {
+    background: #000;
 }
 
 .monster .health {

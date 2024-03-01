@@ -15,6 +15,8 @@ const increase = (str, n) => {
 var frame = 0;
 var direction = 1;
 var health = 11;
+var spawnSkool = false;
+var tasks = [false];
 
 setInterval(() => {
     frame += 10;
@@ -46,6 +48,9 @@ const startUp = () => {
     document.querySelectorAll(".scroll *").forEach(item => {
         item.style.left = `${item.getAttribute("data-pos").split(",")[0]}px`;
         item.style.bottom = `${item.getAttribute("data-pos").split(",")[1]}px`;
+        item.style.width = `${item.getAttribute("data-scale").split(",")[0]}px`;
+        item.style.height = `${item.getAttribute("data-scale").split(",")[1]}px`;
+        item.style.background = item.getAttribute("data-color");
     })
     document.addEventListener("keydown", (event) => {
         keyInputs[event.keyCode] = true;
@@ -65,8 +70,10 @@ const startUp = () => {
             bullet.style.left = increase(bullet.style.left, 25 * direction);
         });
         character.src = "assets/char-trigger.gif";
+        character.style.scale = "1.25";
         setTimeout(() => {
             character.src = "assets/character.png";
+            character.style.scale = "1";
         }, 500);
         setTimeout(() => {
             bullet.remove();
@@ -86,21 +93,25 @@ const startUp = () => {
             bullet.style.left = increase(bullet.style.left, 25 * direction);
         });
         character.src = "assets/char-trigger.gif";
+        character.style.scale = "1.25";
         setTimeout(() => {
             character.src = "assets/character.png";
+            character.style.scale = "1";
         }, 500);
         setTimeout(() => {
             bullet.remove();
             clearInterval(bulletMove);
         }, 1000);
     });
-    document.querySelector("#secondary.ground").style.left = `${screen.innerWidth}px`;
     document.addEventListener("keydown", (event) => {
         if (event.key == "e") {
             if (!document.querySelector(".blue-box[filled]")) return;
-            document.querySelector(".bullet-blue").style.left = increase(document.querySelector(".bullet-blue").getBoundingClientRect().left, document.querySelector(".bullet-blue").getBoundingClientRect().width);
-            document.querySelector(".bullet-blue").style.bottom = increase(document.querySelector(".bullet-blue").getBoundingClientRect().bottom, document.querySelector(".bullet-blue").getBoundingClientRect().height);
-            document.querySelector(".bullet-blue").style.display = "block";
+            var superBullet = document.createElement("div");
+            superBullet.classList.add("bullet-blue");
+            superBullet.style.left = `${increase(character.style.left, character.getBoundingClientRect().width)}px`;
+            superBullet.style.bottom = `${increase(character.style.bottom, character.getBoundingClientRect().height)}px`;
+            superBullet.style.display = "block";
+            document.body.appendChild(superBullet);
         }
     });
 }
@@ -132,8 +143,7 @@ const game = () => {
         character.style.bottom = increase(character.style.bottom, 5);
     }
     if (keyInputs[32] && (numerize(character.style.bottom) == 150 || conditions.bottomCol)) jump();
-    if ((keyInputs[37] || keyInputs[65]) && !conditions.leftCol) {
-        character.src = "assets/char-walk.gif";
+    if ((keyInputs[37] || keyInputs[65]) && (!conditions.leftCol || conditions.bottomCol)) {
         character.style.transform = "scaleX(-1)";
         direction = -1;
         if (numerize(background.style.left) == 0) {
@@ -146,12 +156,9 @@ const game = () => {
             document.querySelectorAll("[id^='background']").forEach(item => {
                 item.style.left = increase(item.style.left, 1);
             });
-            document.querySelector("#primary.ground").style.left = increase(document.querySelector("#primary.ground").style.left, 2);
-            document.querySelector("#secondary.ground").style.left = increase(document.querySelector("#secondary.ground").style.left, 2);
         }
     }
-    if ((keyInputs[39] || keyInputs[68]) && !conditions.rightCol) {
-        character.src = "assets/char-walk.gif";
+    if ((keyInputs[39] || keyInputs[68]) && (!conditions.rightCol || conditions.bottomCol)) {
         character.style.transform = "scaleX(1)";
         direction = 1;
         if (numerize(character.style.left) < screen.width / 2 - character.getBoundingClientRect().width / 2) {
@@ -161,19 +168,17 @@ const game = () => {
             document.querySelectorAll(".scroll *").forEach(item => {
                 item.style.left = increase(item.style.left, -1 * parseInt(item.getAttribute("data-sc-coeff")));
             });
-            document.querySelectorAll("[id^='background']").forEach(item => {
+            document.querySelectorAll("[id^=background]").forEach(item => {
                 item.style.left = increase(item.style.left, -1);
             });
-            document.querySelector("#primary.ground").style.left = increase(document.querySelector("#primary.ground").style.left, -2);
-            document.querySelector("#secondary.ground").style.left = increase(document.querySelector("#secondary.ground").style.left, -2);
         }
     }
-    document.querySelectorAll("[col]").forEach(item => {
+    document.querySelectorAll(".scroll [col]").forEach(item => {
         if (touches(item, character)) {
-            if (item.getBoundingClientRect().left <= character.getBoundingClientRect().left + character.getBoundingClientRect().width) {
+            if (item.getBoundingClientRect().left <= character.getBoundingClientRect().left + character.getBoundingClientRect().width && character.getBoundingClientRect().left > item.getBoundingClientRect().left) {
                 conditions.rightCol = true;
             }
-            if (item.getBoundingClientRect().right >= character.getBoundingClientRect().left - character.getBoundingClientRect().width) {
+            if (item.getBoundingClientRect().right >= character.getBoundingClientRect().left - character.getBoundingClientRect().width && character.getBoundingClientRect().left > item.getBoundingClientRect().left) {
                 conditions.leftCol = true;
             }
             if (character.getBoundingClientRect().top == item.getBoundingClientRect().top - character.getBoundingClientRect().height) {
@@ -181,6 +186,7 @@ const game = () => {
                 conditions.rightCol = false;
                 conditions.leftCol = false;
             }
+            if (item.id = "wall2") spawnSkool = true;
         }
         else {
             conditions.rightCol = false;
@@ -193,20 +199,24 @@ const game = () => {
             item.style.left = `${screen.innerWidth}px`;
         }
     });
-    if (frame % 2000 == 0) {
+    if (frame % 4000 == 0 && spawnSkool && !tasks[0]) {
         spawn(`skool-${["red", "green"][Math.floor(Math.random() * 2)]}`, 30);
     }
     document.querySelectorAll("[id ^= bullet]").forEach(item => {
         document.querySelectorAll(".monster").forEach(monster => {
             if (touches(item, monster.querySelector("img"))) {
-                if (document.querySelectorAll(`.${item.id.split("-")[1]}-box:not([filled])`)[0]) {
-                    document.querySelectorAll(`.${item.id.split("-")[1]}-box:not([filled])`)[0].setAttribute("filled", "true");
-                    if (document.querySelectorAll(".green-box:not([filled]), .red-box:not([filled])").length == 0) {
-                        document.querySelector(".blue-box").setAttribute("filled", "true");
-                        document.querySelector(".blue-box").innerHTML = "<i class=\"fa fa-star\"></i>"
+                if (item.id.split("-")[1] == monster.getAttribute("data-color")) {
+                    if (document.querySelectorAll(`.${item.id.split("-")[1]}-box:not([filled])`)[0]) {
+                        document.querySelectorAll(`.${item.id.split("-")[1]}-box:not([filled])`)[0].setAttribute("filled", "true");
+                        if (document.querySelectorAll(".green-box:not([filled]), .red-box:not([filled])").length == 0) {
+                            document.querySelector(".blue-box").setAttribute("filled", "true");
+                            document.querySelector(".blue-box").innerHTML = "<i class=\"fa fa-star\"></i>";
+                            tasks[0] = true;
+                            spawnSkool = false;
+                        }
                     }
+                    dealDamage(monster, 10);
                 }
-                dealDamage(monster, 10);
                 item.remove();
             }
         })
@@ -243,6 +253,8 @@ const spawn = (char, hp) => {
     container.appendChild(mob);
     container.appendChild(health);
     mob.style.position = "absolute";
+    container.setAttribute("data-sc-coeff", "2");
+    var y;
     if (char.startsWith("skool-")) {
         var y = 200 + Math.floor(Math.random() * (window.innerHeight - 325));
         mob.style.left = "90%";
@@ -251,10 +263,11 @@ const spawn = (char, hp) => {
         health.style.bottom = `${y + 150}px`;
         mob.id = "skool";
         container.setAttribute("data-force",
-            Math.floor(Math.random() * 5)
+            Math.floor(Math.random() * 4) + 1
         );
     }
-    document.querySelector(".scroll").appendChild(container);
+    container.setAttribute("data-pos", `${window.innerWidth},${y}`);
+    document.body.appendChild(container);
 }
 
 const dealDamage = (mob, hp) => {
