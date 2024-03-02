@@ -17,6 +17,9 @@ var direction = 1;
 var health = 11;
 var spawnSkool = false;
 var tasks = [false];
+var bulletCD = 0;
+var lastSpawn = [100, 150];
+var activePaper = "";
 
 setInterval(() => {
     frame += 10;
@@ -51,14 +54,29 @@ const startUp = () => {
         item.style.width = `${item.getAttribute("data-scale").split(",")[0]}px`;
         item.style.height = `${item.getAttribute("data-scale").split(",")[1]}px`;
         item.style.background = item.getAttribute("data-color");
-    })
+    });
     document.addEventListener("keydown", (event) => {
         keyInputs[event.keyCode] = true;
     });
     document.addEventListener("keyup", (event) => {
         keyInputs[event.keyCode] = false;
     });
-    document.addEventListener("click", (event) => {
+    document.addEventListener("click", () => {
+        if (event.target.getAttribute("clickable")) {
+            if (event.target.getAttribute("data-type") == "page") {
+                paperVisibility(event.target.id, 1, `
+                A / Left Arrow --> Left Movement
+                D / Right Arrow --> Right Movement
+                Space --> Jump
+                Left Click --> Green Bullet
+                Right Click --> Red Bullet
+                E --> Super???
+                -----------------------------
+                Esc --> Close this message
+                `);
+            }
+            return;
+        };
         let bullet = document.createElement("div");
         bullet.id = "bullet-green";
         document.body.appendChild(bullet);
@@ -102,10 +120,18 @@ const startUp = () => {
             setTimeout(() => {
                 clearInterval(superInterval);
                 superBullet.remove();
+                document.querySelector(".blue-box").innerHTML = "";
             }, 2000);
             superBullet.style.display = "block";
             document.body.appendChild(superBullet);
         }
+    });
+    window.addEventListener("keydown", (event) => {
+        if (event.key == "F5") window.open(location.href);
+        if (event.key == "Escape" && activePaper) paperVisibility(activePaper, 0); 
+    });
+    document.querySelector("#instructions").addEventListener("click", () => {
+
     });
 }
 
@@ -139,9 +165,10 @@ const game = () => {
     if ((keyInputs[37] || keyInputs[65]) && !conditions.leftCol) {
         if (direction == 1) {
             character.style.transform = "scaleX(-1)";
-            character.style.left = increase(character.style.left, -134);
+            character.style.left = increase(character.style.left, -110);
             direction = -1;
         }
+        if (conditions.rightCol) return;
         if (numerize(background.style.left) == 0) {
             character.style.left = increase(character.style.left, -2);
         }
@@ -154,12 +181,13 @@ const game = () => {
             });
         }
     }
-    if ((keyInputs[39] || keyInputs[68]) && !conditions.rightCol) {
+    if ((keyInputs[39] || keyInputs[68])) {
         if (direction == -1) {
             character.style.transform = "scaleX(1)";
-            character.style.left = increase(character.style.left, 134);
+            character.style.left = increase(character.style.left, 110);
             direction = 1;
         }
+        if (conditions.rightCol) return;
         if (numerize(character.style.left) < screen.width / 2 - character.getBoundingClientRect().width / 2) {
             character.style.left = increase(character.style.left, 2);
         }
@@ -174,6 +202,8 @@ const game = () => {
     }
     document.querySelectorAll(".scroll [col]").forEach(item => {
         if (touches(item, character)) {
+            console.log(item.getBoundingClientRect().left + item.getBoundingClientRect().width, character.getBoundingClientRect().left);
+            console.log(item.getBoundingClientRect().right + item.getBoundingClientRect().width, character.getBoundingClientRect().right);
             if (item.getBoundingClientRect().left <= character.getBoundingClientRect().left + character.getBoundingClientRect().width) {
                 conditions.rightCol = true;
             }
@@ -269,15 +299,13 @@ const spawn = (char, hp) => {
     container.setAttribute("data-sc-coeff", "2");
     var y;
     if (char.startsWith("skool-")) {
-        var y = 200 + Math.floor(Math.random() * (window.innerHeight - 325));
+        var y = 250 + [0, 250, 500][Math.floor(Math.random() * 3)];
         mob.style.left = "90%";
         mob.style.bottom = `${y}px`;
         health.style.left = "91%";
         health.style.bottom = `${y + 150}px`;
         mob.id = "skool";
-        container.setAttribute("data-force",
-            Math.floor(Math.random() * 4) + 1
-        );
+        container.setAttribute("data-force", "1");
     }
     container.setAttribute("data-pos", `${window.innerWidth},${y}`);
     document.body.appendChild(container);
@@ -298,6 +326,19 @@ const takeDamage = (hp = 1) => {
     document.querySelector("#health-bar").src = `assets/hearts/heart${health.toString()}.png`;
     if (health == 0) {
         alert("yenildin ama henüz kaybetme ekranı yok. :)");
+    }
+}
+
+const paperVisibility = (id, type, text = "") => {
+    if (!document.querySelector(`.page#${id}`)) return;
+    document.querySelector(`.page#${id}`).style.display = ["none", "flex"][type];
+    document.querySelector(`.page#${id}`).innerText = text;
+    if (type == 1) {
+        activePaper = id;
+        document.querySelector(`.page#${id}`).style.opacity = "1";
+    }
+    else {
+        document.querySelector(`.page#${id}`).style.opacity = "0";
     }
 }
 

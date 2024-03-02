@@ -1,3 +1,10 @@
+@font-face {
+    font-family: "Pixel";
+    src: url("assets/joystix\ monospace.otf");
+    font-weight: normal;
+    font-style: normal;
+}
+
 * {
     user-select: none;
 }
@@ -154,6 +161,11 @@ body {
     background: #000;
 }
 
+[data-type=page] {
+    background: #000;
+    cursor: pointer;
+}
+
 .monster .health {
     position: absolute;
     height: 20px;
@@ -167,4 +179,20 @@ body {
     bottom: 20px;
     height: 100px;
     z-index: 1;
+}
+
+.page {
+    display: none;
+    position: fixed;
+    padding: 2rem;
+    border: 5px solid darkslateblue;
+    background: white;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    height: 80%;
+    width: 30%;
+    transition: .3s;
+    opacity: 0;
+    font-family: "Pixel";
 }
