@@ -18,7 +18,8 @@ var health = 11;
 var spawnSkool = false;
 var tasks = [false];
 var bulletCD = 0;
-var lastSpawn = [100, 150];
+var lastSpawn = 100;
+var currentX = 100;
 var activePaper = "";
 
 setInterval(() => {
@@ -49,10 +50,10 @@ const startUp = () => {
     background2.style.left = `${background.getBoundingClientRect().width}px`;
     objects.ground.style.left = "0px";
     document.querySelectorAll(".scroll *").forEach(item => {
-        item.style.left = `${item.getAttribute("data-pos").split(",")[0]}px`;
-        item.style.bottom = `${item.getAttribute("data-pos").split(",")[1]}px`;
-        item.style.width = `${item.getAttribute("data-scale").split(",")[0]}px`;
-        item.style.height = `${item.getAttribute("data-scale").split(",")[1]}px`;
+        item.style.left = `${item.getAttribute("data-pos").split(",")[0]}${item.getAttribute("data-pos").split(",")[0] != "auto" ? "px" : ""}`;
+        item.style.bottom = `${item.getAttribute("data-pos").split(",")[1]}${item.getAttribute("data-pos").split(",")[1] != "auto" ? "px" : ""}`;
+        item.style.width = `${item.getAttribute("data-scale").split(",")[0]}${item.getAttribute("data-scale").split(",")[0] != "auto" ? "px" : ""}`;
+        item.style.height = `${item.getAttribute("data-scale").split(",")[1]}${item.getAttribute("data-scale").split(",")[1] != "auto" ? "px" : ""}`;
         item.style.background = item.getAttribute("data-color");
     });
     document.addEventListener("keydown", (event) => {
@@ -130,8 +131,18 @@ const startUp = () => {
         if (event.key == "F5") window.open(location.href);
         if (event.key == "Escape" && activePaper) paperVisibility(activePaper, 0); 
     });
-    document.querySelector("#instructions").addEventListener("click", () => {
-
+    document.querySelector(".game-over .restart").addEventListener("click", () => {
+        document.querySelector(".game-over").style.display = "none";
+        takeDamage(-10);
+        document.querySelectorAll(".scroll *").forEach(item => {
+            item.style.left = increase(item.style.left, (currentX - lastSpawn) / item.getAttribute("data-sc-coeff"));
+        });
+        if (lastSpawn > screen.innerWidth / 2) {
+            character.style.left = `${(screen.innerWidth - character.getBoundingClientRect().width) / 2}px`;
+        }
+        else {
+            character.style.left = `${lastSpawn}px`;
+        }
     });
 }
 
@@ -167,6 +178,7 @@ const game = () => {
             character.style.transform = "scaleX(-1)";
             character.style.left = increase(character.style.left, -110);
             direction = -1;
+            currentX -= 2;
         }
         if (conditions.rightCol) return;
         if (numerize(background.style.left) == 0) {
@@ -186,6 +198,7 @@ const game = () => {
             character.style.transform = "scaleX(1)";
             character.style.left = increase(character.style.left, 110);
             direction = 1;
+            currentX += 2;
         }
         if (conditions.rightCol) return;
         if (numerize(character.style.left) < screen.width / 2 - character.getBoundingClientRect().width / 2) {
@@ -202,8 +215,6 @@ const game = () => {
     }
     document.querySelectorAll(".scroll [col]").forEach(item => {
         if (touches(item, character)) {
-            console.log(item.getBoundingClientRect().left + item.getBoundingClientRect().width, character.getBoundingClientRect().left);
-            console.log(item.getBoundingClientRect().right + item.getBoundingClientRect().width, character.getBoundingClientRect().right);
             if (item.getBoundingClientRect().left <= character.getBoundingClientRect().left + character.getBoundingClientRect().width) {
                 conditions.rightCol = true;
             }
@@ -215,7 +226,10 @@ const game = () => {
                 conditions.rightCol = false;
                 conditions.leftCol = false;
             }
-            if (item.id = "wall2") spawnSkool = true;
+            if (item.id = "wall2") {
+                spawnSkool = true;
+                document.querySelector(".scroll #wall3").style.display = "block";
+            }
         }
         else {
             conditions.rightCol = false;
@@ -271,6 +285,19 @@ const game = () => {
                 if (touches(item, wall)) {
                     wall.remove();
                 }
+                if (wall.id = "wall3") {
+                    document.querySelector(".overlight").style.opacity = "0";
+                    setTimeout(() => {
+                        document.querySelector(".overlight").style.display = "block";
+                        document.querySelector(".overlight").style.opacity = "1";
+                    }, 1500);
+                    setTimeout(() => {
+                        document.querySelector(".overlight").style.opacity = "0";
+                        setTimeout(() => {
+                            document.querySelector(".overlight").style.display = "none";
+                        }, 1000);
+                    }, 5500);
+                }
             });
             document.querySelectorAll(".monster").forEach(mob => {
                 if (touches(item, mob)) {
@@ -324,9 +351,11 @@ const dealDamage = (mob, hp) => {
 const takeDamage = (hp = 1) => {
     health -= hp;
     document.querySelector("#health-bar").src = `assets/hearts/heart${health.toString()}.png`;
-    if (health == 0) {
-        alert("yenildin ama henüz kaybetme ekranı yok. :)");
-    }
+    if (health == 1) gameOver();
+}
+
+const gameOver = () => {
+    document.querySelector(".game-over").style.display = "block";
 }
 
 const paperVisibility = (id, type, text = "") => {
