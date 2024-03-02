@@ -61,20 +61,12 @@ const startUp = () => {
     document.addEventListener("click", (event) => {
         let bullet = document.createElement("div");
         bullet.id = "bullet-green";
-        setTimeout(() => {
-            document.body.appendChild(bullet);
-            bullet.style.left = increase(character.style.left, character.getBoundingClientRect().width);
+        document.body.appendChild(bullet);
+        bullet.style.left = increase(character.style.left, character.getBoundingClientRect().width);
         bullet.style.bottom = increase(character.style.bottom, character.getBoundingClientRect().height * (2 / 3));
-        }, 500);
         var bulletMove = setInterval(() => {
             bullet.style.left = increase(bullet.style.left, 25 * direction);
         });
-        character.src = "assets/char-trigger.gif";
-        character.style.scale = "1.25";
-        setTimeout(() => {
-            character.src = "assets/character.png";
-            character.style.scale = "1";
-        }, 500);
         setTimeout(() => {
             bullet.remove();
             clearInterval(bulletMove);
@@ -84,20 +76,12 @@ const startUp = () => {
         event.preventDefault();
         let bullet = document.createElement("div");
         bullet.id = "bullet-red";
-        setTimeout(() => {
-            document.body.appendChild(bullet);
-            bullet.style.left = increase(character.style.left, character.getBoundingClientRect().width);
-            bullet.style.bottom = increase(character.style.bottom, character.getBoundingClientRect().height * (2 / 3));
-        }, 500);
+        document.body.appendChild(bullet);
+        bullet.style.left = increase(character.style.left, character.getBoundingClientRect().width);
+        bullet.style.bottom = increase(character.style.bottom, character.getBoundingClientRect().height * (2 / 3));
         var bulletMove = setInterval(() => {
             bullet.style.left = increase(bullet.style.left, 25 * direction);
         });
-        character.src = "assets/char-trigger.gif";
-        character.style.scale = "1.25";
-        setTimeout(() => {
-            character.src = "assets/character.png";
-            character.style.scale = "1";
-        }, 500);
         setTimeout(() => {
             bullet.remove();
             clearInterval(bulletMove);
@@ -107,9 +91,18 @@ const startUp = () => {
         if (event.key == "e") {
             if (!document.querySelector(".blue-box[filled]")) return;
             var superBullet = document.createElement("div");
-            superBullet.classList.add("bullet-blue");
-            superBullet.style.left = `${increase(character.style.left, character.getBoundingClientRect().width)}px`;
-            superBullet.style.bottom = `${increase(character.style.bottom, character.getBoundingClientRect().height)}px`;
+            superBullet.id = "bullet-blue";
+            var superInterval = setInterval(() => {
+                superBullet.style.left = increase(character.style.left, character.getBoundingClientRect().width - 3);
+                superBullet.style.bottom = increase(character.style.bottom, character.getBoundingClientRect().height * (2 / 3) + 7.5);
+            }, 10);
+            document.querySelectorAll(".super-load *").forEach(box => {
+                box.removeAttribute("filled");
+            }),
+            setTimeout(() => {
+                clearInterval(superInterval);
+                superBullet.remove();
+            }, 2000);
             superBullet.style.display = "block";
             document.body.appendChild(superBullet);
         }
@@ -143,9 +136,12 @@ const game = () => {
         character.style.bottom = increase(character.style.bottom, 5);
     }
     if (keyInputs[32] && (numerize(character.style.bottom) == 150 || conditions.bottomCol)) jump();
-    if ((keyInputs[37] || keyInputs[65]) && (!conditions.leftCol || conditions.bottomCol)) {
-        character.style.transform = "scaleX(-1)";
-        direction = -1;
+    if ((keyInputs[37] || keyInputs[65]) && !conditions.leftCol) {
+        if (direction == 1) {
+            character.style.transform = "scaleX(-1)";
+            character.style.left = increase(character.style.left, -134);
+            direction = -1;
+        }
         if (numerize(background.style.left) == 0) {
             character.style.left = increase(character.style.left, -2);
         }
@@ -158,9 +154,12 @@ const game = () => {
             });
         }
     }
-    if ((keyInputs[39] || keyInputs[68]) && (!conditions.rightCol || conditions.bottomCol)) {
-        character.style.transform = "scaleX(1)";
-        direction = 1;
+    if ((keyInputs[39] || keyInputs[68]) && !conditions.rightCol) {
+        if (direction == -1) {
+            character.style.transform = "scaleX(1)";
+            character.style.left = increase(character.style.left, 134);
+            direction = 1;
+        }
         if (numerize(character.style.left) < screen.width / 2 - character.getBoundingClientRect().width / 2) {
             character.style.left = increase(character.style.left, 2);
         }
@@ -175,10 +174,10 @@ const game = () => {
     }
     document.querySelectorAll(".scroll [col]").forEach(item => {
         if (touches(item, character)) {
-            if (item.getBoundingClientRect().left <= character.getBoundingClientRect().left + character.getBoundingClientRect().width && character.getBoundingClientRect().left > item.getBoundingClientRect().left) {
+            if (item.getBoundingClientRect().left <= character.getBoundingClientRect().left + character.getBoundingClientRect().width) {
                 conditions.rightCol = true;
             }
-            if (item.getBoundingClientRect().right >= character.getBoundingClientRect().left - character.getBoundingClientRect().width && character.getBoundingClientRect().left > item.getBoundingClientRect().left) {
+            if (item.getBoundingClientRect().right >= character.getBoundingClientRect().left - character.getBoundingClientRect().width) {
                 conditions.leftCol = true;
             }
             if (character.getBoundingClientRect().top == item.getBoundingClientRect().top - character.getBoundingClientRect().height) {
@@ -216,8 +215,8 @@ const game = () => {
                         }
                     }
                     dealDamage(monster, 10);
+                    item.remove();
                 }
-                item.remove();
             }
         })
     });
@@ -236,6 +235,20 @@ const game = () => {
             item.remove();
         }
     });
+    if (document.querySelector("#bullet-blue")) {
+        document.querySelectorAll("#bullet-blue").forEach(item => {
+            document.querySelectorAll("[sup-br]").forEach(wall => {
+                if (touches(item, wall)) {
+                    wall.remove();
+                }
+            });
+            document.querySelectorAll(".monster").forEach(mob => {
+                if (touches(item, mob)) {
+                    mob.remove();
+                }
+            })
+        });
+    }
 }
 
 const spawn = (char, hp) => {

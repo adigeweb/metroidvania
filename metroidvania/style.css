@@ -150,6 +150,10 @@ body {
     background: #000;
 }
 
+#wall3 {
+    background: #000;
+}
+
 .monster .health {
     position: absolute;
     height: 20px;
