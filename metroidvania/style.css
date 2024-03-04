@@ -7,6 +7,7 @@
 
 * {
     user-select: none;
+    font-family: Pixel;
 }
 
 body {
@@ -155,6 +156,9 @@ body {
 
 #wall3 {
     display: none;
+}
+
+#wall3, #wall4, #wall5, #wall6, #wall7, #wall8 {
     background: darkslategray;
 }
 
@@ -174,7 +178,7 @@ body {
     left: 50px;
     bottom: 20px;
     height: 100px;
-    z-index: 1;
+    z-index: 1500;
 }
 
 .page {
@@ -192,6 +196,11 @@ body {
     opacity: 0;
     font-family: "Pixel";
     z-index: 1000;
+}
+
+.page#outta-dark {
+    color: rgba(255, 255, 255, .01);
+    background: black;
 }
 
 .game-over {
@@ -239,9 +248,116 @@ body {
     right: 0;
     top: 0;
     bottom: 0;
-    background-color: white;
+    background: white;
     transition: opacity 1s;
     z-index: 1000;
+}
+
+.darken {
+    display: none;
+    background: rgba(0, 0, 0, .975);
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 999;
+}
+
+.lighten {
+    display: none;
+    position: absolute;
+    height: 150px;
+    width: 150px;
+    border-radius: 50%;
+    backdrop-filter: brightness(2000%);
+    z-index: 1000;
+}
+
+.darken, .lighten {
+    pointer-events: none;
+}
+
+.prompt {
+    display: none;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    font-size: 30px;
+    background: white;
+    height: 300px;
+    width: 300px;
+    padding: 20px;
+    z-index: 3000;
+}
+
+.prompt input {
+    background: none;
+    border: none;
+    border-bottom: 3px solid dodgerblue;
+    width: 275px;
+    font-size: 25px;
+}
+
+.prompt input:focus {
+    outline: 0;
+}
+
+.prompt button {
+    height: 40px;
+    width: 125px;
+    background: none;
+    border: 3px solid dodgerblue;
+    border-radius: 2px;
+}
+
+.prompt button:hover {
+    color: white;
+    background: dodgerblue;
+    transition: .2s;
+}
+
+.prompt .close {
+    color: gray;
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    transition: .2s;
+    cursor: pointer;
+}
+
+.prompt .close:hover {
+    color: black;
+}
+
+.prompt h3#error {
+    display: none;
+    color: red;
+    font-size: 15px;
+}
+
+.prompt h3#success {
+    display: none;
+    color: limegreen;
+    font-size: 15px;
+}
+
+[data-type=button] {
+    border-radius: 20px;
+    background: crimson;
+    border: 10px solid black;
+    cursor: pointer;
+}
+
+[data-type=healer] {
+    color: limegreen;
+    font-size: 50px;
+    padding: 0;
 }
 
 @keyframes flip-flop {

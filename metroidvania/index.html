@@ -16,9 +16,17 @@
         <div id="primary" class="ground"></div>
         <div id="secondary" class="ground"></div>
         <div class="scroll">
-            <div col id="wall2" data-sc-coeff="2" data-pos="1700,150" data-scale="50,10"></div>
+            <div col id="wall2" data-sc-coeff="2" data-pos="1700,145" data-scale="50,10"></div>
             <div col id="wall3" sup-br data-sc-coeff="2" data-pos="2000,150" data-scale="75,1500"></div>
+            <div col id="wall4" data-sc-coeff="2" data-pos="3500,200" data-scale="150,60"></div>
+            <div col id="wall5" data-sc-coeff="2" data-pos="3700,300" data-scale="150,60"></div>
+            <div col id="wall6" data-sc-coeff="2" data-pos="5400,150" data-scale="75,1500"></div>
             <img id="instructions" data-type="page" clickable="true" data-sc-coeff="2" data-pos="500,150" data-scale="50,auto" src="assets/paper.png" />
+            <img id="outta-dark" data-type="page" clickable="true" data-sc-coeff="2" data-pos="5000,150" data-scale="50,auto" src="assets/paper.png" />
+            <div col id="password-button" data-type="button" clickable="true" data-sc-coeff="2" data-pos="4950,450" data-scale="50,50"></div>
+            <div col id="wall7" data-sc-coeff="2" data-pos="5700,200" data-scale="150,60"></div>
+            <div col id="wall8" data-sc-coeff="2" data-pos="5900,300" data-scale="150,60"></div>
+            <div data-type="healer" data-sc-coeff="2" data-pos="5950, 400" data-scale="60, 60" data-points="2">+</div>
         </div>
         <div class="super-load">
             <div class="green-box"></div>
@@ -30,12 +38,22 @@
             <div class="red-box"></div>
         </div>
         <div class="page" id="instructions"></div>
+        <div class="page" id="outta-dark"></div>
         <div class="game-over">
             <div class="title">Game Over!</div>
             <img class="picture" src="assets/die.png" />
             <div class="restart">Restart</div>
         </div>
         <div class="overlight"></div>
+        <div class="darken"></div>
+        <div class="lighten"></div>
+        <div class="prompt">
+            <div class="close">&times;</div>
+            <input />
+            <button>Submit</button><br />
+            <h3 id="error">Wrong Password!</h3>
+            <h3 id="success">Correct Password!</h3>
+        </div>
     </body>
 </html>
 <script src="script.js"></script>

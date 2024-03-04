@@ -18,9 +18,11 @@ var health = 11;
 var spawnSkool = false;
 var tasks = [false];
 var bulletCD = 0;
-var lastSpawn = 100;
+var lastSpawn = localStorage.getItem("lastSpawn") ? localStorage.getItem("lastSpawn") : 100;
 var currentX = 100;
 var activePaper = "";
+var touchedItem = "";
+var movable = true;
 
 setInterval(() => {
     frame += 10;
@@ -42,6 +44,37 @@ const conditions = {
 }
 
 const keyInputs = {};
+
+const paperTexts = {
+    "instructions": `
+    A / Left Arrow --> Left Movement
+    D / Right Arrow --> Right Movement
+    Space --> Jump
+    Left Click --> Green Bullet
+    Right Click --> Red Bullet
+    E --> Super???
+    -----------------------------
+    Esc --> Close this message
+    `,
+    "outta-dark": "11-01-06-11-05-06 (convert to text)"
+}
+
+const onclicks = {
+    password: () => {
+        var pw = document.querySelector(".prompt input").value;
+        if (pw.toLowerCase() == "kafkef") {
+            if (document.querySelector("#wall6")) {
+                document.querySelector("#wall6").remove();
+                document.querySelector(".prompt h3#error").style.display = "none";
+                document.querySelector(".prompt h3#success").style.display = "block";
+            }
+        }
+        else {
+            document.querySelector(".prompt h3#error").style.display = "block";
+            document.querySelector(".prompt h3#success").style.display = "none";
+        }
+    }
+}
 
 const startUp = () => {
     character.style.left = "100px";
@@ -65,16 +98,7 @@ const startUp = () => {
     document.addEventListener("click", () => {
         if (event.target.getAttribute("clickable")) {
             if (event.target.getAttribute("data-type") == "page") {
-                paperVisibility(event.target.id, 1, `
-                A / Left Arrow --> Left Movement
-                D / Right Arrow --> Right Movement
-                Space --> Jump
-                Left Click --> Green Bullet
-                Right Click --> Red Bullet
-                E --> Super???
-                -----------------------------
-                Esc --> Close this message
-                `);
+                paperVisibility(event.target.id, 1, paperTexts[event.target.id]);
             }
             return;
         };
@@ -135,7 +159,7 @@ const startUp = () => {
         document.querySelector(".game-over").style.display = "none";
         takeDamage(-10);
         document.querySelectorAll(".scroll *").forEach(item => {
-            item.style.left = increase(item.style.left, (currentX - lastSpawn) / item.getAttribute("data-sc-coeff"));
+            item.style.left = increase(item.style.left, (currentX - lastSpawn) / (-1 * item.getAttribute("data-sc-coeff")));
         });
         if (lastSpawn > screen.innerWidth / 2) {
             character.style.left = `${(screen.innerWidth - character.getBoundingClientRect().width) / 2}px`;
@@ -143,6 +167,11 @@ const startUp = () => {
         else {
             character.style.left = `${lastSpawn}px`;
         }
+    });
+    document.body.addEventListener("mousemove", (event) => {
+        if (document.querySelector(".darken").style.display == "none") return;
+        document.querySelector(".lighten").style.left = `${event.clientX - 75}px`;
+        document.querySelector(".lighten").style.top = `${event.clientY - 75}px`;
     });
 }
 
@@ -173,7 +202,7 @@ const game = () => {
         character.style.bottom = increase(character.style.bottom, 5);
     }
     if (keyInputs[32] && (numerize(character.style.bottom) == 150 || conditions.bottomCol)) jump();
-    if ((keyInputs[37] || keyInputs[65]) && !conditions.leftCol) {
+    if ((keyInputs[37] || keyInputs[65]) && !conditions.leftCol && numerize(character.style.left) > 0 && movable) {
         if (direction == 1) {
             character.style.transform = "scaleX(-1)";
             character.style.left = increase(character.style.left, -110);
@@ -181,6 +210,7 @@ const game = () => {
             currentX -= 2;
         }
         if (conditions.rightCol) return;
+        currentX -= 2;
         if (numerize(background.style.left) == 0) {
             character.style.left = increase(character.style.left, -2);
         }
@@ -193,14 +223,14 @@ const game = () => {
             });
         }
     }
-    if ((keyInputs[39] || keyInputs[68])) {
+    if ((keyInputs[39] || keyInputs[68]) && movable) {
         if (direction == -1) {
             character.style.transform = "scaleX(1)";
             character.style.left = increase(character.style.left, 110);
             direction = 1;
-            currentX += 2;
         }
         if (conditions.rightCol) return;
+        currentX += 2;
         if (numerize(character.style.left) < screen.width / 2 - character.getBoundingClientRect().width / 2) {
             character.style.left = increase(character.style.left, 2);
         }
@@ -213,28 +243,32 @@ const game = () => {
             });
         }
     }
+    if (conditions.leftCol && !conditions.bottomCol && touchedItem.getBoundingClientRect().right < character.getBoundingClientRect().right) {
+        character.style.left = increase(character.style.left, -1);
+    }
+    conditions.leftCol = false;
+    conditions.rightCol = false;
+    conditions.bottomCol = false;
     document.querySelectorAll(".scroll [col]").forEach(item => {
         if (touches(item, character)) {
             if (item.getBoundingClientRect().left <= character.getBoundingClientRect().left + character.getBoundingClientRect().width) {
                 conditions.rightCol = true;
+                touchedItem = item;
             }
             if (item.getBoundingClientRect().right >= character.getBoundingClientRect().left - character.getBoundingClientRect().width) {
                 conditions.leftCol = true;
+                touchedItem = item;
             }
             if (character.getBoundingClientRect().top == item.getBoundingClientRect().top - character.getBoundingClientRect().height) {
                 conditions.bottomCol = true;
                 conditions.rightCol = false;
                 conditions.leftCol = false;
+                touchedItem = item;
             }
-            if (item.id = "wall2") {
+            if (item.id == "wall2" && document.querySelector(".scroll #wall3")) {
                 spawnSkool = true;
                 document.querySelector(".scroll #wall3").style.display = "block";
             }
-        }
-        else {
-            conditions.rightCol = false;
-            conditions.leftCol = false;
-            conditions.bottomCol = false;
         }
     });
     document.querySelectorAll("#ground").forEach(item => {
@@ -286,17 +320,18 @@ const game = () => {
                     wall.remove();
                 }
                 if (wall.id = "wall3") {
+                    movable = false;
                     document.querySelector(".overlight").style.opacity = "0";
-                    setTimeout(() => {
-                        document.querySelector(".overlight").style.display = "block";
-                        document.querySelector(".overlight").style.opacity = "1";
-                    }, 1500);
+                    document.querySelector(".overlight").style.display = "block";
+                    document.querySelector(".overlight").style.opacity = "1";
+                    movable = false;
                     setTimeout(() => {
                         document.querySelector(".overlight").style.opacity = "0";
                         setTimeout(() => {
                             document.querySelector(".overlight").style.display = "none";
+                            movable = true;
                         }, 1000);
-                    }, 5500);
+                    }, 4500);
                 }
             });
             document.querySelectorAll(".monster").forEach(mob => {
@@ -306,6 +341,21 @@ const game = () => {
             })
         });
     }
+    if (currentX > 4000 && currentX < 5400) {
+        document.querySelector(".darken").style.display = "block";
+        document.querySelector(".lighten").style.display = "block";
+    }
+    else if (document.querySelector(".darken").style.display == "block") {
+        document.querySelector(".darken").style.display = "none";
+        document.querySelector(".lighten").style.display = "none";
+    }
+    document.querySelectorAll("[data-type=healer]").forEach(item => {
+        if (touches(item, character)) {
+            var healPoints = item.getAttribute("data-points");
+            item.remove();
+            takeDamage(health + healPoints > 11 ? -11 + healPoints : - healPoints);
+        }
+    })
 }
 
 const spawn = (char, hp) => {
@@ -370,6 +420,26 @@ const paperVisibility = (id, type, text = "") => {
         document.querySelector(`.page#${id}`).style.opacity = "0";
     }
 }
+
+const modalVisibility = (box, type) => {
+    box.style.display = ["none", "flex"][type];
+}
+
+document.querySelectorAll(".close").forEach(item => {
+    item.addEventListener("click", () => {
+        modalVisibility(item.parentElement, 0);
+        movable = true;
+    });
+});
+
+document.querySelector(".prompt button").addEventListener("click", () => {
+    onclicks.password();
+});
+
+document.querySelector("#password-button[data-type=button]").addEventListener("click", () => {
+    modalVisibility(document.querySelector(".prompt"), 1);
+    movable = false;
+});
 
 startUp();
 setInterval(game, 5);
