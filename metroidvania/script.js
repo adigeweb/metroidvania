@@ -18,7 +18,6 @@ var health = 11;
 var spawnSkool = false;
 var tasks = [false];
 var bulletCD = 0;
-var lastSpawn = localStorage.getItem("lastSpawn") ? localStorage.getItem("lastSpawn") : 100;
 var currentX = 100;
 var activePaper = "";
 var touchedItem = "";
@@ -32,7 +31,8 @@ const objects = {
     character: document.querySelector("#character"),
     ground: document.querySelector("#primary.ground"),
     background: document.querySelector("#background"),
-    background2: document.querySelector("#background2")
+    background2: document.querySelector("#background2"),
+    background3: document.querySelector("#background3")
 }
 
 const conditions = {
@@ -55,6 +55,7 @@ const paperTexts = {
     E --> Super???
     -----------------------------
     Esc --> Close this message
+    Reloading the page restarts the game!
     `,
     "outta-dark": "11-01-06-11-05-06 (convert to text)"
 }
@@ -81,6 +82,7 @@ const startUp = () => {
     character.style.bottom = "500px";
     background.style.left = "-0px";
     background2.style.left = `${background.getBoundingClientRect().width}px`;
+    background3.style.left = `${background.getBoundingClientRect().width + background2.getBoundingClientRect().width}px`;
     objects.ground.style.left = "0px";
     document.querySelectorAll(".scroll *").forEach(item => {
         item.style.left = `${item.getAttribute("data-pos").split(",")[0]}${item.getAttribute("data-pos").split(",")[0] != "auto" ? "px" : ""}`;
@@ -156,17 +158,7 @@ const startUp = () => {
         if (event.key == "Escape" && activePaper) paperVisibility(activePaper, 0); 
     });
     document.querySelector(".game-over .restart").addEventListener("click", () => {
-        document.querySelector(".game-over").style.display = "none";
-        takeDamage(-10);
-        document.querySelectorAll(".scroll *").forEach(item => {
-            item.style.left = increase(item.style.left, (currentX - lastSpawn) / (-1 * item.getAttribute("data-sc-coeff")));
-        });
-        if (lastSpawn > screen.innerWidth / 2) {
-            character.style.left = `${(screen.innerWidth - character.getBoundingClientRect().width) / 2}px`;
-        }
-        else {
-            character.style.left = `${lastSpawn}px`;
-        }
+        location.reload();
     });
     document.body.addEventListener("mousemove", (event) => {
         if (document.querySelector(".darken").style.display == "none") return;
@@ -207,7 +199,6 @@ const game = () => {
             character.style.transform = "scaleX(-1)";
             character.style.left = increase(character.style.left, -110);
             direction = -1;
-            currentX -= 2;
         }
         if (conditions.rightCol) return;
         currentX -= 2;
@@ -218,7 +209,7 @@ const game = () => {
             document.querySelectorAll(".scroll *").forEach(item => {
                 item.style.left = increase(item.style.left, parseInt(item.getAttribute("data-sc-coeff")));
             });
-            document.querySelectorAll("[id^='background']").forEach(item => {
+            document.querySelectorAll(".backgrounds *").forEach(item => {
                 item.style.left = increase(item.style.left, 1);
             });
         }
@@ -238,12 +229,12 @@ const game = () => {
             document.querySelectorAll(".scroll *").forEach(item => {
                 item.style.left = increase(item.style.left, -1 * parseInt(item.getAttribute("data-sc-coeff")));
             });
-            document.querySelectorAll("[id^=background]").forEach(item => {
+            document.querySelectorAll(".backgrounds *").forEach(item => {
                 item.style.left = increase(item.style.left, -1);
             });
         }
     }
-    if (conditions.leftCol && !conditions.bottomCol && touchedItem.getBoundingClientRect().right < character.getBoundingClientRect().right) {
+    if (conditions.leftCol && !conditions.bottomCol && numerize(character.style.left) < numerize(touchedItem.style.left)) {
         character.style.left = increase(character.style.left, -1);
     }
     conditions.leftCol = false;
@@ -341,7 +332,7 @@ const game = () => {
             })
         });
     }
-    if (currentX > 4000 && currentX < 5400) {
+    if (currentX > 4500 && currentX < 5900) {
         document.querySelector(".darken").style.display = "block";
         document.querySelector(".lighten").style.display = "block";
     }
@@ -349,13 +340,25 @@ const game = () => {
         document.querySelector(".darken").style.display = "none";
         document.querySelector(".lighten").style.display = "none";
     }
+    if (currentX == 7000) {
+        clearTypewrite();
+        typewrite("Is there someone here?", 300);
+    }
+    if (currentX == 9000) {
+        clearTypewrite();
+        typewrite("I dont't have much time. Someone, help me!", 300);
+    }
+    if (currentX == 11000) {
+        clearTypewrite();
+        typewrite("PLEASE HELP ME!", 750, "red");
+    }
     document.querySelectorAll("[data-type=healer]").forEach(item => {
         if (touches(item, character)) {
             var healPoints = item.getAttribute("data-points");
             item.remove();
-            takeDamage(health + healPoints > 11 ? -11 + healPoints : - healPoints);
+            healUp(healPoints);
         }
-    })
+    });
 }
 
 const spawn = (char, hp) => {
@@ -400,8 +403,15 @@ const dealDamage = (mob, hp) => {
 
 const takeDamage = (hp = 1) => {
     health -= hp;
+    if (health < 1) health = 1;
     document.querySelector("#health-bar").src = `assets/hearts/heart${health.toString()}.png`;
     if (health == 1) gameOver();
+}
+
+const healUp = (hp = 1) => {
+    health += hp;
+    if (health > 11) health = 11;
+    document.querySelector("#health-bar").src = `assets/hearts/heart${health.toString()}.png`;
 }
 
 const gameOver = () => {
@@ -423,6 +433,30 @@ const paperVisibility = (id, type, text = "") => {
 
 const modalVisibility = (box, type) => {
     box.style.display = ["none", "flex"][type];
+}
+
+var typing = null;
+var isTyping = false;
+
+const typewrite = (text, delay, color = "black") => {
+    if (isTyping) return;
+    isTyping = true;
+    document.querySelector("#typewrite").style.color = color;
+    let i = 0;
+    typing = setInterval(() => {
+        document.querySelector("#typewrite").textContent += text[i];
+        i++;
+        if (i == text.length) {
+            clearInterval(typing);
+            isTyping = false;
+        }
+    }, delay);
+}
+
+const clearTypewrite = () => {
+    document.querySelector("#typewrite").textContent = "";
+    isTyping = false;
+    if (typing) clearInterval(typing);
 }
 
 document.querySelectorAll(".close").forEach(item => {

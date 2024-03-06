@@ -27,6 +27,7 @@ body {
 #character {
     position: absolute;
     height: 200px;
+    z-index: 999;
 }
 
 #primary.ground {
@@ -358,6 +359,14 @@ body {
     color: limegreen;
     font-size: 50px;
     padding: 0;
+}
+
+#typewrite {
+    position: absolute;
+    left: 50%;
+    top: 25px;
+    transform: translateX(-50%);
+    font-size: 30px,;
 }
 
 @keyframes flip-flop {
