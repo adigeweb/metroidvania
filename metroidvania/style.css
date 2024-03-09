@@ -159,7 +159,7 @@ body {
     display: none;
 }
 
-#wall3, #wall4, #wall5, #wall6, #wall7, #wall8 {
+#wall3, #wall4, #wall5, #wall6, #wall7, #wall8, #wall9, #wall10, #wall11 {
     background: darkslategray;
 }
 
@@ -263,6 +263,8 @@ body {
     bottom: 0;
     right: 0;
     z-index: 999;
+    opacity: 0;
+    transition: .5s;
 }
 
 .lighten {
@@ -361,12 +363,87 @@ body {
     padding: 0;
 }
 
-#typewrite {
+#typewrite, #blink {
     position: absolute;
     left: 50%;
     top: 25px;
     transform: translateX(-50%);
-    font-size: 30px,;
+}
+
+#typewrite {
+    font-size: 30px;
+}
+
+#blink {
+    font-size: 25px;
+}
+
+#antipoison {
+    height: 40px;
+    width: 40px;
+    border-radius: 50%;
+    background: violet;
+    border: 10px solid purple;
+}
+
+#main-menu {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 4000;
+    background: black;
+}
+
+#main-menu #menu-background {
+    position: absolute;
+    height: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+#main-menu [id $= -button] {
+    height: 50px;
+    width: 150px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+#main-menu [id $= -button]:hover {
+    scale: 1.02;
+}
+
+#main-menu #menu-play-button {
+    position: absolute;
+    left: 40%;
+    top: 55%;
+}
+
+#main-menu #menu-credits-button {
+    position: absolute;
+    left: 40%;
+    top: 65%;
+}
+
+.tap-for-music {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    font-size: 40px;
+    z-index: 5000;
+    background: black;
+}
+
+.tap-for-music .text {
+    color: white;
+    position: absolute;
+    cursor: pointer;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
 }
 
 @keyframes flip-flop {

@@ -16,12 +16,15 @@ var frame = 0;
 var direction = 1;
 var health = 11;
 var spawnSkool = false;
-var tasks = [false];
+var spawnAntipoison = false;
+var tasks = [false, false];
 var bulletCD = 0;
 var currentX = 100;
 var activePaper = "";
 var touchedItem = "";
 var movable = true;
+var antipoisonCount = 0;
+var menuOpen = true;
 
 setInterval(() => {
     frame += 10;
@@ -34,6 +37,22 @@ const objects = {
     background2: document.querySelector("#background2"),
     background3: document.querySelector("#background3")
 }
+
+const sounds = {
+    menu: "Relaxing_Interlude.ogg",
+    ingame: "IWalkedInTheRainToday.mp3",
+    fight: "fight.wav",
+    die: "Icy_Game_Over.mp3"
+}
+
+Object.keys(sounds).forEach(item => {
+    sounds[item] = new Audio(`assets/${sounds[item]}`);
+});
+
+document.querySelector(".tap-for-music").addEventListener("click", () => {
+    sounds["menu"].play();
+    document.querySelector(".tap-for-music").remove();
+});
 
 const conditions = {
     jumping: false,
@@ -78,11 +97,14 @@ const onclicks = {
 }
 
 const startUp = () => {
+    sounds["menu"].pause();
+    sounds["ingame"].loop = true;
+    sounds["ingame"].play();
     character.style.left = "100px";
     character.style.bottom = "500px";
     background.style.left = "-0px";
     background2.style.left = `${background.getBoundingClientRect().width}px`;
-    background3.style.left = `${background.getBoundingClientRect().width + background2.getBoundingClientRect().width}px`;
+    background3.style.left = `${background.getBoundingClientRect().width + background2.getBoundingClientRect().width - 5}px`;
     objects.ground.style.left = "0px";
     document.querySelectorAll(".scroll *").forEach(item => {
         item.style.left = `${item.getAttribute("data-pos").split(",")[0]}${item.getAttribute("data-pos").split(",")[0] != "auto" ? "px" : ""}`;
@@ -158,6 +180,7 @@ const startUp = () => {
         if (event.key == "Escape" && activePaper) paperVisibility(activePaper, 0); 
     });
     document.querySelector(".game-over .restart").addEventListener("click", () => {
+        window.open(location.href);
         location.reload();
     });
     document.body.addEventListener("mousemove", (event) => {
@@ -165,7 +188,16 @@ const startUp = () => {
         document.querySelector(".lighten").style.left = `${event.clientX - 75}px`;
         document.querySelector(".lighten").style.top = `${event.clientY - 75}px`;
     });
+    document.querySelector("#main-menu").style.display = "none";
+    menuOpen = false;
+    setInterval(game, 5);
 }
+
+document.querySelector("#main-menu #menu-play-button").addEventListener("click", () => {
+    if (menuOpen) {
+        startUp();
+    }
+});
 
 const jump = () => {
     conditions.jumping = true;
@@ -237,6 +269,9 @@ const game = () => {
     if (conditions.leftCol && !conditions.bottomCol && numerize(character.style.left) < numerize(touchedItem.style.left)) {
         character.style.left = increase(character.style.left, -1);
     }
+    if (conditions.rightCol && !conditions.bottomCol && numerize(character.style.left) > numerize(touchedItem.style.left)) {
+        character.style.left = increase(character.style.left, 1);
+    }
     conditions.leftCol = false;
     conditions.rightCol = false;
     conditions.bottomCol = false;
@@ -256,8 +291,10 @@ const game = () => {
                 conditions.leftCol = false;
                 touchedItem = item;
             }
-            if (item.id == "wall2" && document.querySelector(".scroll #wall3")) {
+            if (item.id == "wall2" && document.querySelector(".scroll #wall3") && !tasks[0]) {
                 spawnSkool = true;
+                sounds["ingame"].pause();
+                sounds["fight"].play();
                 document.querySelector(".scroll #wall3").style.display = "block";
             }
         }
@@ -267,8 +304,16 @@ const game = () => {
             item.style.left = `${screen.innerWidth}px`;
         }
     });
-    if (frame % 4000 == 0 && spawnSkool && !tasks[0]) {
+    if (frame % 4000 == 0 && spawnSkool && !tasks[0] && !menuOpen) {
         spawn(`skool-${["red", "green"][Math.floor(Math.random() * 2)]}`, 30);
+    }
+    if (frame % 4000 == 0 && spawnAntipoison && tasks[1]) {
+        var elem = document.createElement("div");
+        elem.id = "antipoison";
+        elem.style.left = `${50 + Math.floor(Math.random() * (window.innerWidth - 100))}px`;
+        elem.style.top = `${150 + Math.floor(Math.random() * (window.innerHeight - 300))}px`;
+        elem.setAttribute("data-sc-coeff", "2");
+        document.querySelector(".scroll").appendChild(elem);
     }
     document.querySelectorAll("[id ^= bullet]").forEach(item => {
         document.querySelectorAll(".monster").forEach(monster => {
@@ -280,6 +325,8 @@ const game = () => {
                             document.querySelector(".blue-box").setAttribute("filled", "true");
                             document.querySelector(".blue-box").innerHTML = "<i class=\"fa fa-star\"></i>";
                             tasks[0] = true;
+                            sounds["fight"].pause();
+                            sounds["ingame"].play();
                             spawnSkool = false;
                         }
                     }
@@ -332,25 +379,36 @@ const game = () => {
             })
         });
     }
-    if (currentX > 4500 && currentX < 5900) {
+    if (currentX > 4500 && currentX < 6500) {
+        document.querySelector(".darken").style.opacity = "1";
         document.querySelector(".darken").style.display = "block";
         document.querySelector(".lighten").style.display = "block";
     }
     else if (document.querySelector(".darken").style.display == "block") {
+        document.querySelector(".darken").style.opacity = "0";
         document.querySelector(".darken").style.display = "none";
         document.querySelector(".lighten").style.display = "none";
     }
     if (currentX == 7000) {
         clearTypewrite();
-        typewrite("Is there someone here?", 300);
+        typewrite("Is there someone here?", 150);
     }
     if (currentX == 9000) {
         clearTypewrite();
-        typewrite("I dont't have much time. Someone, help me!", 300);
+        typewrite("I don't have much time. Someone, help me!", 150);
     }
     if (currentX == 11000) {
         clearTypewrite();
-        typewrite("PLEASE HELP ME!", 750, "red");
+        typewrite("PLEASE HELP ME!", 375, "red");
+    }
+    if (currentX == 13000 && !tasks[1]) {
+        tasks[1] = true;
+        clearTypewrite();
+        clearBlink();
+        blink("Objective: Grab the antipoisons the survive Bocu! (0/20)");
+        spawnAntipoison = true;
+        sounds["ingame"].pause();
+        sounds["fight"].play();
     }
     document.querySelectorAll("[data-type=healer]").forEach(item => {
         if (touches(item, character)) {
@@ -359,6 +417,44 @@ const game = () => {
             healUp(healPoints);
         }
     });
+    if (document.querySelector("#antipoison")) {
+        document.querySelectorAll("#antipoison").forEach(item => {
+            if (touches(item, character)) {
+                item.remove();
+                antipoisonCount++;
+                if (antipoisonCount == 20) {
+                    spawnAntipoison = false;
+                    document.querySelector("#blink").style.color = "gold";
+                    sounds["fight"].pause();
+                    sounds["ingame"].play();
+                    setTimeout(() => {
+                        document.querySelector(".overlight").style.opacity = "0";
+                        document.querySelector(".overlight").style.display = "block";
+                        document.querySelector(".overlight").style.opacity = "1";
+                        movable = false;
+                        document.querySelector("#wall11").remove();
+                        clearBlink();
+                        document.querySelector("#typewrite").style.top = "25px";
+                        document.querySelector("#typewrite").style.transform = "translateX(-50%)";
+                        typewrite("Thanks for saving me!", 150);
+                        typewrite("I got to go now!..", 200);
+                        document.querySelector("#typewrite").style.top = "40%";
+                        document.querySelector("#typewrite").style.transform = "translate(-50%, -50%)";
+                        setTimeout(() => {
+                            document.querySelector("#velet").remove();
+                            document.querySelector(".overlight").style.opacity = "0";
+                            setTimeout(() => {
+                                document.querySelector(".overlight").style.display = "none";
+                                clearTypewrite();
+                                movable = true;
+                            }, 1000);
+                        }, 4500);
+                    }, 1500);
+                }
+                editBlink(`Objective: Grab the antipoisons the survive Bocu! (${antipoisonCount}/20)`);
+            }
+        });
+    }
 }
 
 const spawn = (char, hp) => {
@@ -459,6 +555,44 @@ const clearTypewrite = () => {
     if (typing) clearInterval(typing);
 }
 
+const blink = (text) => {
+    document.querySelector("#blink").style.display = "block";
+    document.querySelector("#blink").innerText = text;
+    var blinking = setInterval(() => {
+        if (document.querySelector("#blink").style.opacity == "1") {
+            document.querySelector("#blink").style.opacity = "0";
+        }
+        else {
+            document.querySelector("#blink").style.opacity = "1";
+        }
+    }, 500);
+    setTimeout(() => {
+        clearInterval(blinking);
+        document.querySelector("#blink").style.opacity = "1";
+    }, 2000);
+}
+
+const clearBlink = () => {
+    document.querySelector("#blink").innerText = "";
+    document.querySelector("#blink").style.display = "none";
+}
+
+const editBlink = (text) => {
+    document.querySelector("#blink").innerText = text;
+    var blinking = setInterval(() => {
+        if (document.querySelector("#blink").style.opacity == "1") {
+            document.querySelector("#blink").style.opacity = "0";
+        }
+        else {
+            document.querySelector("#blink").style.opacity = "1";
+        }
+    }, 250);
+    setTimeout(() => {
+        clearInterval(blinking);
+        document.querySelector("#blink").style.opacity = "1";
+    }, 1250);
+}
+
 document.querySelectorAll(".close").forEach(item => {
     item.addEventListener("click", () => {
         modalVisibility(item.parentElement, 0);
@@ -474,6 +608,3 @@ document.querySelector("#password-button[data-type=button]").addEventListener("c
     modalVisibility(document.querySelector(".prompt"), 1);
     movable = false;
 });
-
-startUp();
-setInterval(game, 5);

@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="style.css">
-        <title>Document</title>
+        <title>EidenLab</title>
     </head>
     <body>
         <div class="backgrounds">
@@ -17,7 +17,7 @@
         <div id="primary" class="ground"></div>
         <div id="secondary" class="ground"></div>
         <div class="scroll">
-            <div col id="wall2" data-sc-coeff="2" data-pos="1700,145" data-scale="50,10"></div>
+            <div col id="wall2" data-sc-coeff="2" data-pos="1600,145" data-scale="150,10"></div>
             <div col id="wall3" sup-br data-sc-coeff="2" data-pos="2000,150" data-scale="75,1500"></div>
             <div col id="wall4" data-sc-coeff="2" data-pos="3500,200" data-scale="150,60"></div>
             <div col id="wall5" data-sc-coeff="2" data-pos="3700,300" data-scale="150,60"></div>
@@ -27,7 +27,11 @@
             <div col id="password-button" data-type="button" clickable="true" data-sc-coeff="2" data-pos="5450,450" data-scale="50,50"></div>
             <div col id="wall7" data-sc-coeff="2" data-pos="6200,200" data-scale="150,60"></div>
             <div col id="wall8" data-sc-coeff="2" data-pos="6400,300" data-scale="150,60"></div>
+            <div col id="wall9" data-sc-coeff="2" data-pos="8000,250" data-scale="300,60"></div>
+            <div col id="wall10" data-sc-coeff="2" data-pos="8350,350" data-scale="300,60"></div>
             <div id="healer1" data-type="healer" data-sc-coeff="2" data-pos="6450, 450" data-scale="60, 60" data-points="2">+</div>
+            <img id="velet" data-sc-coeff="2" data-pos="14000, 150" data-scale="100,auto" src="assets/bocu.png" />
+            <div col id="wall11" data-sc-coeff="2" data-pos="14500,150" data-scale="75,1500"></div>
         </div>
         <div class="super-load">
             <div class="green-box"></div>
@@ -56,6 +60,15 @@
             <h3 id="success">Correct Password!</h3>
         </div>
         <div id="typewrite"></div>
+        <div id="blink"></div>
+        <div id="main-menu">
+            <img src="assets/ana_menu.png" id="menu-background" />
+            <button id="menu-play-button">Play <i class="fa fa-play"></i></button>
+            <button id="menu-credits-button">Credits <i class="fa fa-user-group"></i></button>
+        </div>
+        <div class="tap-for-music">
+            <div class="text">Tap to Start!</div>
+        </div>
     </body>
 </html>
 <script src="script.js"></script>
