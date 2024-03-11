@@ -23,8 +23,11 @@ var currentX = 100;
 var activePaper = "";
 var touchedItem = "";
 var movable = true;
+var shootable = true;
 var antipoisonCount = 0;
 var menuOpen = true;
+var frameListing = true;
+var activeFrame = 1;
 
 setInterval(() => {
     frame += 10;
@@ -42,7 +45,9 @@ const sounds = {
     menu: "Relaxing_Interlude.ogg",
     ingame: "IWalkedInTheRainToday.mp3",
     fight: "fight.wav",
-    die: "Icy_Game_Over.mp3"
+    die: "Icy_Game_Over.mp3",
+    alarm: "alarm.wav",
+    darkness: "Something_is_near.mp3"
 }
 
 Object.keys(sounds).forEach(item => {
@@ -50,8 +55,13 @@ Object.keys(sounds).forEach(item => {
 });
 
 document.querySelector(".tap-for-music").addEventListener("click", () => {
+    sounds["menu"].loop = true;
     sounds["menu"].play();
     document.querySelector(".tap-for-music").remove();
+});
+
+window.addEventListener("keydown", (event) => {
+    if (event.key == "F5") window.open(location.href);
 });
 
 const conditions = {
@@ -96,6 +106,26 @@ const onclicks = {
     }
 }
 
+const loadFrame = (n) => {
+    if (activeFrame > 4) {
+        clearFrames();
+        if (!movable) movable = true;
+        if (!shootable) shootable = true;
+        return;
+    }
+    document.querySelector("#frame-overlay").style.display = "block";
+    activeFrame++;
+    movable = false;
+    shootable = false;
+    document.querySelector("#frame-overlay").style.background = `url("assets/frames/frame-${n}.png") no-repeat fixed center`;
+}
+
+const clearFrames = () => {
+    movable = true;
+    document.querySelector("#frame-overlay").style.background = "transparent";
+    document.querySelector("#frame-overlay").style.display = "none";
+}
+
 const startUp = () => {
     sounds["menu"].pause();
     sounds["ingame"].loop = true;
@@ -126,11 +156,18 @@ const startUp = () => {
             }
             return;
         };
+        if (!shootable || document.querySelector(".bullet-fill").getAttribute("data-filled") == "0") return;
         let bullet = document.createElement("div");
         bullet.id = "bullet-green";
         document.body.appendChild(bullet);
         bullet.style.left = increase(character.style.left, character.getBoundingClientRect().width);
         bullet.style.bottom = increase(character.style.bottom, character.getBoundingClientRect().height * (2 / 3));
+        document.querySelector(".bullet-fill").setAttribute("data-filled",
+            parseInt(document.querySelector(".bullet-fill").getAttribute("data-filled")) <= 0 ?
+            document.querySelector(".bullet-fill").getAttribute("data-filled") :
+            (parseInt(document.querySelector(".bullet-fill").getAttribute("data-filled")) - 1).toString()
+        );
+        document.querySelector(".bullet-fill").style.border = `${document.querySelector(".bullet-fill").getAttribute("data-filled") * 2}px solid orangered`;
         var bulletMove = setInterval(() => {
             bullet.style.left = increase(bullet.style.left, 25 * direction);
         });
@@ -141,13 +178,20 @@ const startUp = () => {
     });
     document.addEventListener("contextmenu", (event) => {
         event.preventDefault();
+        if (!shootable || document.querySelector(".bullet-fill").getAttribute("data-filled") == "0") return;
         let bullet = document.createElement("div");
         bullet.id = "bullet-red";
         document.body.appendChild(bullet);
         bullet.style.left = increase(character.style.left, character.getBoundingClientRect().width);
         bullet.style.bottom = increase(character.style.bottom, character.getBoundingClientRect().height * (2 / 3));
+        document.querySelector(".bullet-fill").setAttribute("data-filled",
+            parseInt(document.querySelector(".bullet-fill").getAttribute("data-filled")) <= 0 ?
+            document.querySelector(".bullet-fill").getAttribute("data-filled") :
+            (parseInt(document.querySelector(".bullet-fill").getAttribute("data-filled")) - 1).toString()
+        );
+        document.querySelector(".bullet-fill").style.border = `${document.querySelector(".bullet-fill").getAttribute("data-filled") * 2}px solid orangered`;
         var bulletMove = setInterval(() => {
-            bullet.style.left = increase(bullet.style.left, 25 * direction);
+            bullet.style.left = increase(bullet.style.left, 15 * direction);
         });
         setTimeout(() => {
             bullet.remove();
@@ -175,10 +219,13 @@ const startUp = () => {
             document.body.appendChild(superBullet);
         }
     });
+    loadFrame(1);
     window.addEventListener("keydown", (event) => {
-        if (event.key == "F5") window.open(location.href);
-        if (event.key == "Escape" && activePaper) paperVisibility(activePaper, 0); 
+        if (event.key == "Escape" && activePaper) paperVisibility(activePaper, 0);
     });
+    window.addEventListener("keyup", (event) => {
+        if (event.key == "Enter" && frameListing) loadFrame(activeFrame);
+    })
     document.querySelector(".game-over .restart").addEventListener("click", () => {
         window.open(location.href);
         location.reload();
@@ -292,10 +339,17 @@ const game = () => {
                 touchedItem = item;
             }
             if (item.id == "wall2" && document.querySelector(".scroll #wall3") && !tasks[0]) {
-                spawnSkool = true;
+                movable = false;
                 sounds["ingame"].pause();
-                sounds["fight"].play();
-                document.querySelector(".scroll #wall3").style.display = "block";
+                sounds["alarm"].play();
+                setTimeout(() => {
+                    movable = true;
+                    spawnSkool = true;
+                    sounds["ingame"].pause();
+                    sounds["fight"].loop = true;
+                    sounds["fight"].play();
+                    document.querySelector(".scroll #wall3").style.display = "block";
+                }, 1000);
             }
         }
     });
@@ -380,14 +434,21 @@ const game = () => {
         });
     }
     if (currentX > 4500 && currentX < 6500) {
-        document.querySelector(".darken").style.opacity = "1";
         document.querySelector(".darken").style.display = "block";
+        document.querySelector(".darken").style.opacity = "1";
         document.querySelector(".lighten").style.display = "block";
+        sounds["ingame"].pause();
+        sounds["darkness"].loop = true;
+        sounds["darkness"].play();
     }
     else if (document.querySelector(".darken").style.display == "block") {
         document.querySelector(".darken").style.opacity = "0";
-        document.querySelector(".darken").style.display = "none";
+        setTimeout(() => {
+            document.querySelector(".darken").style.display = "none";
+        }, 1000);
         document.querySelector(".lighten").style.display = "none";
+        sounds["darkness"].pause();
+        sounds["ingame"].play();
     }
     if (currentX == 7000) {
         clearTypewrite();
@@ -454,6 +515,17 @@ const game = () => {
                 editBlink(`Objective: Grab the antipoisons the survive Bocu! (${antipoisonCount}/20)`);
             }
         });
+    }
+    if (currentX > screen.width / 2 && numerize(character.style.left) != screen.width / 2 && direction == 1) {
+        character.style.left = `${screen.width / 2}px`;
+    }
+    if (frame % 1000 == 0) {
+        document.querySelector(".bullet-fill").setAttribute("data-filled",
+            parseInt(document.querySelector(".bullet-fill").getAttribute("data-filled")) >= 3 ?
+            document.querySelector(".bullet-fill").getAttribute("data-filled") :
+            (parseInt(document.querySelector(".bullet-fill").getAttribute("data-filled")) + 1).toString()
+        );
+        document.querySelector(".bullet-fill").style.border = `${document.querySelector(".bullet-fill").getAttribute("data-filled") * 2}px solid orangered`;
     }
 }
 
