@@ -17,7 +17,7 @@ var direction = 1;
 var health = 11;
 var spawnSkool = false;
 var spawnAntipoison = false;
-var tasks = [false, false];
+var tasks = [false, false, false, false];
 var bulletCD = 0;
 var currentX = 100;
 var activePaper = "";
@@ -28,6 +28,9 @@ var antipoisonCount = 0;
 var menuOpen = true;
 var frameListing = true;
 var activeFrame = 1;
+var skoolSpawnPos = [0, 250, 500];
+var spawnDoembly = false;
+var blueGateHits = 0;
 
 setInterval(() => {
     frame += 10;
@@ -38,7 +41,8 @@ const objects = {
     ground: document.querySelector("#primary.ground"),
     background: document.querySelector("#background"),
     background2: document.querySelector("#background2"),
-    background3: document.querySelector("#background3")
+    background3: document.querySelector("#background3"),
+    background4: document.querySelector("#background4"),
 }
 
 const sounds = {
@@ -52,6 +56,7 @@ const sounds = {
 
 Object.keys(sounds).forEach(item => {
     sounds[item] = new Audio(`assets/${sounds[item]}`);
+    sounds[item].volume = .2;
 });
 
 document.querySelector(".tap-for-music").addEventListener("click", () => {
@@ -135,6 +140,7 @@ const startUp = () => {
     background.style.left = "-0px";
     background2.style.left = `${background.getBoundingClientRect().width}px`;
     background3.style.left = `${background.getBoundingClientRect().width + background2.getBoundingClientRect().width - 5}px`;
+    background4.style.left = `${background.getBoundingClientRect().width + background2.getBoundingClientRect().width + background3.getBoundingClientRect().width - 10}px`;
     objects.ground.style.left = "0px";
     document.querySelectorAll(".scroll *").forEach(item => {
         item.style.left = `${item.getAttribute("data-pos").split(",")[0]}${item.getAttribute("data-pos").split(",")[0] != "auto" ? "px" : ""}`;
@@ -169,7 +175,7 @@ const startUp = () => {
         );
         document.querySelector(".bullet-fill").style.border = `${document.querySelector(".bullet-fill").getAttribute("data-filled") * 2}px solid orangered`;
         var bulletMove = setInterval(() => {
-            bullet.style.left = increase(bullet.style.left, 25 * direction);
+            bullet.style.left = increase(bullet.style.left, 20 * direction);
         });
         setTimeout(() => {
             bullet.remove();
@@ -191,7 +197,7 @@ const startUp = () => {
         );
         document.querySelector(".bullet-fill").style.border = `${document.querySelector(".bullet-fill").getAttribute("data-filled") * 2}px solid orangered`;
         var bulletMove = setInterval(() => {
-            bullet.style.left = increase(bullet.style.left, 15 * direction);
+            bullet.style.left = increase(bullet.style.left, 20 * direction);
         });
         setTimeout(() => {
             bullet.remove();
@@ -339,6 +345,8 @@ const game = () => {
                 touchedItem = item;
             }
             if (item.id == "wall2" && document.querySelector(".scroll #wall3") && !tasks[0]) {
+                if (item.getAttribute("data-pressed")) return;
+                item.setAttribute("data-pressed", "true");
                 movable = false;
                 sounds["ingame"].pause();
                 sounds["alarm"].play();
@@ -351,6 +359,15 @@ const game = () => {
                     document.querySelector(".scroll #wall3").style.display = "block";
                 }, 1000);
             }
+            if (item.id.startsWith("poison")) {
+                takeDamage(10);
+            }
+            if (item.id == "wall4") {
+                skoolSpawnPos = [250, 350, 450];
+                spawnSkool = true;
+                sounds["ingame"].pause();
+                sounds["fight"].play();
+            }
         }
     });
     document.querySelectorAll("#ground").forEach(item => {
@@ -358,16 +375,19 @@ const game = () => {
             item.style.left = `${screen.innerWidth}px`;
         }
     });
-    if (frame % 4000 == 0 && spawnSkool && !tasks[0] && !menuOpen) {
+    if (frame % 4000 == 0 && spawnSkool && ((!tasks[0] && currentX < 3000) || (!tasks[1] && currentX > 3500)) && !menuOpen) {
         spawn(`skool-${["red", "green"][Math.floor(Math.random() * 2)]}`, 30);
     }
-    if (frame % 4000 == 0 && spawnAntipoison && tasks[1]) {
+    if (frame % 4000 == 0 && spawnAntipoison && tasks[2]) {
         var elem = document.createElement("div");
         elem.id = "antipoison";
         elem.style.left = `${50 + Math.floor(Math.random() * (window.innerWidth - 100))}px`;
         elem.style.top = `${150 + Math.floor(Math.random() * (window.innerHeight - 300))}px`;
         elem.setAttribute("data-sc-coeff", "2");
         document.querySelector(".scroll").appendChild(elem);
+    }
+    if (frame % 4000 == 0 && spawnDoembly && !tasks[3] && currentX > 16000) {
+        spawn(`doembly-${["red", "green"][Math.floor(Math.random() * 2)]}`, 50);
     }
     document.querySelectorAll("[id ^= bullet]").forEach(item => {
         document.querySelectorAll(".monster").forEach(monster => {
@@ -409,9 +429,17 @@ const game = () => {
         document.querySelectorAll("#bullet-blue").forEach(item => {
             document.querySelectorAll("[sup-br]").forEach(wall => {
                 if (touches(item, wall)) {
-                    wall.remove();
+                    if (wall.getAttribute("triple-sup-br")) {
+                        blueGateHits++;
+                        editBlink(`Objective: Break the gate with 3 supers! (${blueGateHits}/3)`)
+                        if (blueGateHits == 3) {
+                            wall.remove();
+                            document.querySelector("#blink").style.color = "gold";
+                        }
+                    }
+                    else wall.remove();
                 }
-                if (wall.id = "wall3") {
+                if (wall.id == "wall3" || wall.id == "wall5-6") {
                     movable = false;
                     document.querySelector(".overlight").style.opacity = "0";
                     document.querySelector(".overlight").style.display = "block";
@@ -433,7 +461,7 @@ const game = () => {
             })
         });
     }
-    if (currentX > 4500 && currentX < 6500) {
+    if (currentX > 5250 && currentX < 14250) {
         document.querySelector(".darken").style.display = "block";
         document.querySelector(".darken").style.opacity = "1";
         document.querySelector(".lighten").style.display = "block";
@@ -448,28 +476,53 @@ const game = () => {
         }, 1000);
         document.querySelector(".lighten").style.display = "none";
         sounds["darkness"].pause();
-        sounds["ingame"].play();
+        if (sounds["fight"].paused) sounds["ingame"].play();
     }
-    if (currentX == 7000) {
+    if (currentX == 7500) {
+        skoolSpawnPos = [];
         clearTypewrite();
-        typewrite("Is there someone here?", 150);
+        typewrite("Is there someone here?", 150, "white");
     }
     if (currentX == 9000) {
         clearTypewrite();
-        typewrite("I don't have much time. Someone, help me!", 150);
+        typewrite("I don't have much time. Someone, help me!", 150, "white");
     }
     if (currentX == 11000) {
         clearTypewrite();
         typewrite("PLEASE HELP ME!", 375, "red");
     }
-    if (currentX == 13000 && !tasks[1]) {
-        tasks[1] = true;
+    if (currentX == 14250 && !tasks[2]) {
+        tasks[2] = true;
         clearTypewrite();
         clearBlink();
-        blink("Objective: Grab the antipoisons the survive Bocu! (0/20)");
-        spawnAntipoison = true;
-        sounds["ingame"].pause();
-        sounds["fight"].play();
+        blink("Objective: Grab the antipoisons to survive Bocu! (0/20)");
+        sounds["alarm"].play();
+        setTimeout(() => {
+            spawnAntipoison = true;
+            sounds["ingame"].pause();
+            sounds["fight"].play();
+        }, 1000);
+    }
+    if (currentX == 16000) {
+        if (spawnDoembly) return;
+        movable = false;
+        clearTypewrite();
+        typewrite("Something is approaching...", 150);
+        setTimeout(() => {
+            clearTypewrite();
+            typewrite("Something white...", 150);
+            setTimeout(() => {
+                clearTypewrite();
+                typewrite("Something weird...", 150);
+                setTimeout(() => {
+                    movable = true;
+                    sounds["ingame"].pause();
+                    sounds["fight"].play();
+                    blink("Objective: Break the gate with 3 supers! (0/3)");
+                    spawnDoembly = true;
+                }, 2700);
+            }, 2700);
+        }, 4050);
     }
     document.querySelectorAll("[data-type=healer]").forEach(item => {
         if (touches(item, character)) {
@@ -509,10 +562,11 @@ const game = () => {
                                 clearTypewrite();
                                 movable = true;
                             }, 1000);
+                            document.querySelector("#blink").style.color = "black";
                         }, 4500);
                     }, 1500);
                 }
-                editBlink(`Objective: Grab the antipoisons the survive Bocu! (${antipoisonCount}/20)`);
+                editBlink(`Objective: Grab the antipoisons to survive Bocu! (${antipoisonCount}/20)`);
             }
         });
     }
@@ -526,6 +580,17 @@ const game = () => {
             (parseInt(document.querySelector(".bullet-fill").getAttribute("data-filled")) + 1).toString()
         );
         document.querySelector(".bullet-fill").style.border = `${document.querySelector(".bullet-fill").getAttribute("data-filled") * 2}px solid orangered`;
+    }
+    if (document.querySelector(".monster#doembly")) {
+        document.querySelectorAll(".monster#doembly").forEach(item => {
+            var ball = document.createElement("div");
+            ball.classList.add("doballs");
+        });
+    }
+    if (document.querySelector(".doballs")) {
+        document.querySelectorAll(".doballs").forEach(item => {
+            item.style.left = increase(item.style.left, -3);
+        });
     }
 }
 
@@ -547,13 +612,22 @@ const spawn = (char, hp) => {
     container.setAttribute("data-sc-coeff", "2");
     var y;
     if (char.startsWith("skool-")) {
-        var y = 250 + [0, 250, 500][Math.floor(Math.random() * 3)];
+        var y = 250 + skoolSpawnPos[Math.floor(Math.random() * skoolSpawnPos.length)];
         mob.style.left = "90%";
         mob.style.bottom = `${y}px`;
         health.style.left = "91%";
         health.style.bottom = `${y + 150}px`;
         mob.id = "skool";
         container.setAttribute("data-force", "1");
+    }
+    else if (char.startsWith("doembly-")) {
+        mob.style.left = "85%";
+        mob.style.bottom = `150px`;
+        health.style.left = "91%";
+        health.style.bottom = `450px`;
+        mob.id = "doembly";
+        container.setAttribute("data-force", "1");
+        mob.style.height = "200px";
     }
     container.setAttribute("data-pos", `${window.innerWidth},${y}`);
     document.body.appendChild(container);
@@ -584,6 +658,12 @@ const healUp = (hp = 1) => {
 
 const gameOver = () => {
     document.querySelector(".game-over").style.display = "block";
+    sounds["fight"].pause();
+    sounds["ingame"].pause();
+    sounds["darkness"].pause();
+    sounds["die"].play();
+    shootable = false;
+    movable = false;
 }
 
 const paperVisibility = (id, type, text = "") => {

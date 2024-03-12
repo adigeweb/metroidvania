@@ -159,8 +159,16 @@ body {
     display: none;
 }
 
-#wall3, #wall4, #wall5, #wall6, #wall7, #wall8, #wall9, #wall10, #wall11 {
+#wall3, #wall4, #wall5, [id ^= wall5], #wall6, #wall7, #wall8, #wall9, #wall10, #wall11 {
     background: darkslategray;
+}
+
+#wall12 {
+    background: dodgerblue;
+}
+
+[id ^= poison] {
+    background: green;
 }
 
 [data-type=page] {
@@ -472,6 +480,14 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.doballs {
+    height: 50px;
+    width: 50px;
+    border-radius: 50%;
+    background: white;
+    border: 5px solid gray;
 }
 
 @keyframes flip-flop {
