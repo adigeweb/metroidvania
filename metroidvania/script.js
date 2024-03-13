@@ -765,5 +765,6 @@ window.mobileCheck = () => { let check = false; (function(a){if(/(android|bb\d+|
 
 if(window.mobileCheck()) {
     document.body.style.background = "black";
+    document.body.style.color = "white";
     document.body.innerHTML = "You cannot play this game on a mobile device, unfortunately. Want a <a href='https://google.com/search?q=Poğaça'>pogaca</a>";
 }
